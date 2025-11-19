@@ -152,6 +152,18 @@ final class ImonetizeitClient
         ]);
     }
 
+    public function getSmartlinkStats(string $start, string $end): ?array
+    {
+        if (!$this->isValidDate($start) || !$this->isValidDate($end)) {
+            return null;
+        }
+
+        return $this->request('GET', 'https://api.imonetizeit.com/v1/statistics/sm', [
+            'start_date' => $start,
+            'end_date'   => $end,
+        ]);
+    }
+
     public function getBalance(): ?array
     {
         return $this->request('GET', 'https://api.imonetizeit.com/v1/balance');

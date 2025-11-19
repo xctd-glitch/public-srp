@@ -539,6 +539,7 @@ document.addEventListener('alpine:init', () => {
                 'smartlinks': 'View all your smartlinks and configurations',
                 'stats_daily': 'Get detailed statistics for a specific day',
                 'stats_range': 'View statistics for a custom date range',
+                'stats_sm': 'Get smartlink statistics for a date range',
                 'balance': 'Check your current account balance and earnings',
                 'points': 'View your bonus points and rewards',
                 'leads': 'Get conversion/lead report for date range',
@@ -593,7 +594,7 @@ document.addEventListener('alpine:init', () => {
                 // Add parameters based on endpoint
                 if (['stats_daily'].includes(this.apiKeyFetcher.endpoint)) {
                     payload.date = this.apiKeyFetcher.startDate;
-                } else if (['stats_range', 'leads', 'clicks'].includes(this.apiKeyFetcher.endpoint)) {
+                } else if (['stats_range', 'stats_sm', 'leads', 'clicks'].includes(this.apiKeyFetcher.endpoint)) {
                     payload.start_date = this.apiKeyFetcher.startDate;
                     payload.end_date = this.apiKeyFetcher.endDate;
                 } else if (this.apiKeyFetcher.endpoint === 'offers') {
