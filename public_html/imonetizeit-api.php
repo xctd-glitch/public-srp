@@ -45,6 +45,7 @@ try {
         'clicks'      => $client->getClicks(...validateDateRange($data)),
         'stats_daily' => $client->getStatsDaily(validateDateParam($data, 'date')),
         'stats_range' => $client->getStatsRange(...validateDateRange($data)),
+        'stats_sm'    => $client->getSmartlinkStats(...validateDateRange($data)),
         'balance'     => $client->getBalance(),
         'points'      => $client->getPoints(),
         default       => throw new InvalidArgumentException('Unknown action: ' . $action),
