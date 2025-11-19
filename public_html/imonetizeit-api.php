@@ -10,9 +10,7 @@ Session::start();
 
 // Check authentication
 if (empty($_SESSION['srp_admin_id'])) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'error' => 'Unauthorized'], JSON_THROW_ON_ERROR);
-    exit;
+    respondJson(401, ['ok' => false, 'error' => 'Unauthorized']);
 }
 
 header('Content-Type: application/json; charset=utf-8');
@@ -21,116 +19,101 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 $method = $_SERVER['REQUEST_METHOD'] ?? '';
 
 if ($method !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['ok' => false, 'error' => 'Method Not Allowed'], JSON_THROW_ON_ERROR);
-    exit;
+    respondJson(405, ['ok' => false, 'error' => 'Method Not Allowed']);
 }
 
 try {
-    $raw = file_get_contents('php://input');
-    if ($raw === false) {
-        $raw = '';
-    }
-
-    $data = json_decode($raw ?: '{}', true, 512, JSON_THROW_ON_ERROR);
+    $raw = file_get_contents('php://input') ?: '';
+    $data = json_decode($raw === '' ? '{}' : $raw, true, 512, JSON_THROW_ON_ERROR);
 
     if (!is_array($data)) {
         throw new InvalidArgumentException('Invalid JSON payload');
     }
 
-    $action = $data['action'] ?? '';
+    $action = trim((string)($data['action'] ?? ''));
 
     if ($action === '') {
         throw new InvalidArgumentException('Missing action parameter');
     }
 
     $client = new ImonetizeitClient();
-    $result = null;
 
-    switch ($action) {
-        case 'offers':
-            $limit = (int)($data['limit'] ?? 50);
-            $result = $client->getOffers($limit);
-            break;
-
-        case 'smartlinks':
-            $result = $client->getSmartlinks();
-            break;
-
-        case 'leads':
-            $start = $data['start_date'] ?? '';
-            $end = $data['end_date'] ?? '';
-            if ($start === '' || $end === '') {
-                throw new InvalidArgumentException('Missing start_date or end_date');
-            }
-            $result = $client->getLeads($start, $end);
-            break;
-
-        case 'clicks':
-            $start = $data['start_date'] ?? '';
-            $end = $data['end_date'] ?? '';
-            if ($start === '' || $end === '') {
-                throw new InvalidArgumentException('Missing start_date or end_date');
-            }
-            $result = $client->getClicks($start, $end);
-            break;
-
-        case 'stats_daily':
-            $date = $data['date'] ?? '';
-            if ($date === '') {
-                throw new InvalidArgumentException('Missing date parameter');
-            }
-            $result = $client->getStatsDaily($date);
-            break;
-
-        case 'stats_range':
-            $start = $data['start_date'] ?? '';
-            $end = $data['end_date'] ?? '';
-            if ($start === '' || $end === '') {
-                throw new InvalidArgumentException('Missing start_date or end_date');
-            }
-            $result = $client->getStatsRange($start, $end);
-            break;
-
-        case 'balance':
-            $result = $client->getBalance();
-            break;
-
-        case 'points':
-            $result = $client->getPoints();
-            break;
-
-        default:
-            throw new InvalidArgumentException('Unknown action: ' . $action);
-    }
+    $result = match ($action) {
+        'offers'      => $client->getOffers(normalizeLimit($data['limit'] ?? null)),
+        'smartlinks'  => $client->getSmartlinks(),
+        'leads'       => $client->getLeads(...validateDateRange($data)),
+        'clicks'      => $client->getClicks(...validateDateRange($data)),
+        'stats_daily' => $client->getStatsDaily(validateDateParam($data, 'date')),
+        'stats_range' => $client->getStatsRange(...validateDateRange($data)),
+        'balance'     => $client->getBalance(),
+        'points'      => $client->getPoints(),
+        default       => throw new InvalidArgumentException('Unknown action: ' . $action),
+    };
 
     if ($result === null) {
-        http_response_code(500);
-        echo json_encode(['ok' => false, 'error' => 'API request failed'], JSON_THROW_ON_ERROR);
-        exit;
+        respondJson(502, ['ok' => false, 'error' => 'API request failed']);
     }
 
-    echo json_encode([
+    respondJson(200, [
         'ok' => true,
         'data' => $result
-    ], JSON_THROW_ON_ERROR);
-
+    ]);
 } catch (RuntimeException $e) {
-    http_response_code(503);
-    echo json_encode([
+    respondJson(503, [
         'ok' => false,
         'error' => 'Service configuration error: ' . $e->getMessage()
-    ], JSON_THROW_ON_ERROR);
+    ]);
 } catch (InvalidArgumentException $e) {
-    http_response_code(400);
-    echo json_encode([
+    respondJson(400, [
         'ok' => false,
         'error' => 'Bad request: ' . $e->getMessage()
-    ], JSON_THROW_ON_ERROR);
+    ]);
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
+    error_log($e->getMessage());
+    respondJson(500, [
         'ok' => false,
         'error' => 'Internal server error'
-    ], JSON_THROW_ON_ERROR);
+    ]);
+}
+
+function respondJson(int $status, array $payload): void
+{
+    http_response_code($status);
+    echo json_encode($payload, JSON_THROW_ON_ERROR);
+    exit;
+}
+
+function normalizeLimit(mixed $limit): int
+{
+    $limit = filter_var($limit, FILTER_VALIDATE_INT, [
+        'options' => [
+            'default' => 50,
+            'min_range' => 1,
+        ],
+    ]);
+
+    return max(1, min((int)$limit, 200));
+}
+
+function validateDateParam(array $data, string $key): string
+{
+    $value = trim((string)($data[$key] ?? ''));
+
+    if ($value === '') {
+        throw new InvalidArgumentException('Missing ' . $key . ' parameter');
+    }
+
+    if (!preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $value)) {
+        throw new InvalidArgumentException('Invalid ' . $key . ' format, expected YYYY-MM-DD');
+    }
+
+    return $value;
+}
+
+function validateDateRange(array $data): array
+{
+    $start = validateDateParam($data, 'start_date');
+    $end = validateDateParam($data, 'end_date');
+
+    return [$start, $end];
 }
