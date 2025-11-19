@@ -12,6 +12,16 @@ class DecisionController
 {
     public static function handleDecision(): void
     {
+        // Headers & CORS
+        self::handleCors();
+        header('Content-Type: application/json');
+
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+        if ($method === 'OPTIONS') {
+            exit;
+        }
+
         // Auth
         $apiKey = Environment::get('SRP_API_KEY');
         if ($apiKey === '') {
@@ -24,17 +34,6 @@ class DecisionController
         if ($providedKey === '' || !hash_equals($apiKey, $providedKey)) {
             http_response_code(401);
             exit('{"ok":false,"error":"unauthorized"}');
-        }
-
-        // Headers & CORS
-        self::handleCors();
-
-        header('Content-Type: application/json');
-
-        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-
-        if ($method === 'OPTIONS') {
-            exit;
         }
 
         if ($method !== 'POST') {
