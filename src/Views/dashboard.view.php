@@ -323,6 +323,18 @@ document.addEventListener('alpine:init', () => {
             return true;
         },
 
+        isValidUrl(url) {
+            if (!url) return false;
+
+            try {
+                // eslint-disable-next-line no-new
+                new URL(url);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
+
         runTest() {
             const normalizedCountry = (this.testInput.country || '').toUpperCase().trim();
             this.testInput.country = normalizedCountry;
@@ -330,21 +342,32 @@ document.addEventListener('alpine:init', () => {
             let decision = 'B';
             let reason = '';
 
+            this.updateMuteStatus();
+
+            const isMuted = this.muteStatus.isMuted;
+            const hasRedirect = this.isValidUrl(this.cfg.redirect_url);
+
             if (!this.cfg.system_on) {
                 decision = 'B';
                 reason = 'System is OFF';
+            } else if (isMuted) {
+                decision = 'B';
+                reason = 'Auto mute is active';
+            } else if (!hasRedirect) {
+                decision = 'B';
+                reason = 'Redirect URL is missing or invalid';
+            } else if (this.testInput.device !== 'mobile') {
+                decision = 'B';
+                reason = 'Non-mobile device falls back';
             } else if (this.testInput.vpn === 'yes') {
                 decision = 'B';
                 reason = 'VPN / proxy detected';
             } else if (!this.isCountryAllowed(normalizedCountry)) {
                 decision = 'B';
                 reason = 'Country not allowed by current filter mode';
-            } else if (this.testInput.device !== 'mobile') {
-                decision = 'B';
-                reason = 'Non-mobile device falls back';
             } else {
                 decision = 'A';
-                reason = 'System ON, allowed country, mobile device, no VPN';
+                reason = 'System ON, auto-mute off, redirect valid, allowed country, mobile device, no VPN';
             }
 
             this.testResult = {
