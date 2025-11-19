@@ -1,0 +1,97 @@
+# SRP Traffic Control - Crontab Examples
+# Copy and modify according to your environment
+# Edit with: crontab -e
+
+# ============================================
+# AUTO CLEANUP LOGS
+# ============================================
+
+# Weekly cleanup - Every Sunday at 2 AM (RECOMMENDED)
+# Deletes logs older than 7 days
+0 2 * * 0 /usr/bin/php /path/to/public/cron_cleanup_logs.php >> /var/log/srp/cleanup.log 2>&1
+
+# Daily cleanup - Every day at 3 AM
+# For high traffic sites
+# 0 3 * * * /usr/bin/php /path/to/public/cron_cleanup_logs.php >> /var/log/srp/cleanup.log 2>&1
+
+# Monthly cleanup - First day of month at 1 AM
+# For low traffic sites
+# 0 1 1 * * /usr/bin/php /path/to/public/cron_cleanup_logs.php >> /var/log/srp/cleanup.log 2>&1
+
+# Bi-weekly cleanup - Every other Sunday
+# 0 2 */14 * 0 /usr/bin/php /path/to/public/cron_cleanup_logs.php >> /var/log/srp/cleanup.log 2>&1
+
+# ============================================
+# NOTES
+# ============================================
+#
+# Cron format: MIN HOUR DAY MONTH WEEKDAY COMMAND
+#
+# MIN    = 0-59
+# HOUR   = 0-23
+# DAY    = 1-31
+# MONTH  = 1-12
+# WEEKDAY= 0-7 (0 or 7 = Sunday)
+#
+# Examples:
+# * * * * *   = Every minute
+# 0 * * * *   = Every hour
+# 0 0 * * *   = Every day at midnight
+# 0 0 * * 0   = Every Sunday at midnight
+# 0 2 1 * *   = First day of month at 2 AM
+#
+# ============================================
+# PATHS TO UPDATE
+# ============================================
+#
+# PHP binary path - Find with: which php
+# Common paths:
+#   /usr/bin/php
+#   /usr/local/bin/php
+#   /opt/php/bin/php
+#
+# Script path - Full absolute path to your public folder
+# Example:
+#   /home/username/public_html/cron_cleanup_logs.php
+#   /var/www/html/public/cron_cleanup_logs.php
+#
+# Log file path - Where to store cleanup logs
+# Example:
+#   /var/log/srp/cleanup.log
+#   /home/username/logs/cleanup.log
+#
+# ============================================
+# TESTING
+# ============================================
+#
+# Test cron entry (runs every minute for testing):
+# * * * * * /usr/bin/php /path/to/public/cron_cleanup_logs.php --dry-run >> /tmp/test-cleanup.log 2>&1
+#
+# Check cron is running:
+# systemctl status cron    # or
+# service cron status
+#
+# View cron logs:
+# tail -f /var/log/syslog | grep CRON
+# tail -f /var/log/cron
+#
+# ============================================
+# BACKUP (OPTIONAL)
+# ============================================
+#
+# Backup logs before cleanup - Every Sunday at 1:30 AM
+# 30 1 * * 0 mysqldump -u user -p'password' database logs > /backups/logs_$(date +\%Y\%m\%d).sql
+#
+# Then cleanup at 2 AM (see main cron above)
+#
+# ============================================
+# EMAIL NOTIFICATIONS (OPTIONAL)
+# ============================================
+#
+# Send email on completion:
+# MAILTO=admin@example.com
+# 0 2 * * 0 /usr/bin/php /path/to/public/cron_cleanup_logs.php
+#
+# Or with custom subject:
+# 0 2 * * 0 /usr/bin/php /path/to/public/cron_cleanup_logs.php 2>&1 | mail -s "SRP Cleanup Report" admin@example.com
+#
