@@ -53,7 +53,7 @@
                     <input
                         type="text"
                         class="input input-sm w-full"
-                        x-model="envConfig.DB_HOST"
+                        x-model="envConfig.SRP_DB_HOST"
                         placeholder="localhost">
                 </div>
                 <div>
@@ -61,7 +61,7 @@
                     <input
                         type="text"
                         class="input input-sm w-full"
-                        x-model="envConfig.DB_NAME"
+                        x-model="envConfig.SRP_DB_NAME"
                         placeholder="srp_database">
                 </div>
                 <div>
@@ -69,7 +69,7 @@
                     <input
                         type="text"
                         class="input input-sm w-full"
-                        x-model="envConfig.DB_USER"
+                        x-model="envConfig.SRP_DB_USER"
                         placeholder="root">
                 </div>
                 <div>
@@ -77,7 +77,7 @@
                     <input
                         type="password"
                         class="input input-sm w-full"
-                        x-model="envConfig.DB_PASS"
+                        x-model="envConfig.SRP_DB_PASS"
                         placeholder="••••••••">
                 </div>
             </div>

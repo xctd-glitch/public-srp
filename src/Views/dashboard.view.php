@@ -82,10 +82,10 @@ document.addEventListener('alpine:init', () => {
 
         // Environment Config
         envConfig: {
-            DB_HOST: 'localhost',
-            DB_NAME: '',
-            DB_USER: '',
-            DB_PASS: '',
+            SRP_DB_HOST: 'localhost',
+            SRP_DB_NAME: '',
+            SRP_DB_USER: '',
+            SRP_DB_PASS: '',
             SRP_API_URL: 'https://trackng.us/decision.php',
             SRP_API_KEY: '',
             IMONETIZEIT_CLIENT_ID: '13290',
@@ -453,10 +453,10 @@ document.addEventListener('alpine:init', () => {
                     },
                     body: JSON.stringify({
                         action: 'test_db',
-                        host: this.envConfig.DB_HOST,
-                        database: this.envConfig.DB_NAME,
-                        username: this.envConfig.DB_USER,
-                        password: this.envConfig.DB_PASS
+                        host: this.envConfig.SRP_DB_HOST,
+                        database: this.envConfig.SRP_DB_NAME,
+                        username: this.envConfig.SRP_DB_USER,
+                        password: this.envConfig.SRP_DB_PASS
                     })
                 });
 

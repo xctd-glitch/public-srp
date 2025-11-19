@@ -31,10 +31,10 @@ class EnvConfig
 
         $config = [
             // Database
-            'DB_HOST' => getenv('DB_HOST') ?: 'localhost',
-            'DB_NAME' => getenv('DB_NAME') ?: '',
-            'DB_USER' => getenv('DB_USER') ?: '',
-            'DB_PASS' => getenv('DB_PASS') ?: '',
+            'SRP_DB_HOST' => getenv('SRP_DB_HOST') ?: getenv('DB_HOST') ?: 'localhost',
+            'SRP_DB_NAME' => getenv('SRP_DB_NAME') ?: getenv('DB_NAME') ?: '',
+            'SRP_DB_USER' => getenv('SRP_DB_USER') ?: getenv('DB_USER') ?: '',
+            'SRP_DB_PASS' => getenv('SRP_DB_PASS') ?: getenv('DB_PASS') ?: '',
 
             // SRP API
             'SRP_API_URL' => getenv('SRP_API_URL') ?: 'https://trackng.us/decision.php',
@@ -86,6 +86,9 @@ class EnvConfig
                 // Update or add
                 $envVars[$key] = $value;
             }
+
+            // Normalize legacy DB_* keys to SRP_DB_* to keep compatibility with older files
+            $envVars = self::normalizeDbKeys($envVars);
 
             // Write back to file
             $newContent = self::buildEnvContent($envVars);
@@ -222,6 +225,29 @@ class EnvConfig
     }
 
     /**
+     * Normalize legacy DB_* keys to canonical SRP_DB_* keys.
+     */
+    private static function normalizeDbKeys(array $vars): array
+    {
+        $mapping = [
+            'DB_HOST' => 'SRP_DB_HOST',
+            'DB_NAME' => 'SRP_DB_NAME',
+            'DB_USER' => 'SRP_DB_USER',
+            'DB_PASS' => 'SRP_DB_PASS',
+        ];
+
+        foreach ($mapping as $legacy => $canonical) {
+            if (!isset($vars[$canonical]) && isset($vars[$legacy])) {
+                $vars[$canonical] = $vars[$legacy];
+            }
+
+            unset($vars[$legacy]);
+        }
+
+        return $vars;
+    }
+
+    /**
      * Parse .env file content
      */
     private static function parseEnvFile(string $content): array
@@ -265,10 +291,10 @@ class EnvConfig
 
         // Database section
         $content .= "# Database Configuration\n";
-        $content .= "DB_HOST=" . ($vars['DB_HOST'] ?? 'localhost') . "\n";
-        $content .= "DB_NAME=" . ($vars['DB_NAME'] ?? '') . "\n";
-        $content .= "DB_USER=" . ($vars['DB_USER'] ?? '') . "\n";
-        $content .= "DB_PASS=" . ($vars['DB_PASS'] ?? '') . "\n\n";
+        $content .= "SRP_DB_HOST=" . ($vars['SRP_DB_HOST'] ?? 'localhost') . "\n";
+        $content .= "SRP_DB_NAME=" . ($vars['SRP_DB_NAME'] ?? '') . "\n";
+        $content .= "SRP_DB_USER=" . ($vars['SRP_DB_USER'] ?? '') . "\n";
+        $content .= "SRP_DB_PASS=" . ($vars['SRP_DB_PASS'] ?? '') . "\n\n";
 
         // SRP API section
         $content .= "# SRP API Configuration\n";
@@ -291,7 +317,7 @@ class EnvConfig
 
         // Any other vars not in standard sections
         $standardKeys = [
-            'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS',
+            'SRP_DB_HOST', 'SRP_DB_NAME', 'SRP_DB_USER', 'SRP_DB_PASS',
             'SRP_API_URL', 'SRP_API_KEY',
             'APP_ENV', 'APP_DEBUG',
             'SESSION_LIFETIME',
@@ -330,28 +356,28 @@ class EnvConfig
                 'label' => 'Database Configuration',
                 'icon' => 'database',
                 'fields' => [
-                    'DB_HOST' => [
+                    'SRP_DB_HOST' => [
                         'label' => 'Database Host',
                         'type' => 'text',
-                        'value' => $all['DB_HOST'],
+                        'value' => $all['SRP_DB_HOST'],
                         'placeholder' => 'localhost'
                     ],
-                    'DB_NAME' => [
+                    'SRP_DB_NAME' => [
                         'label' => 'Database Name',
                         'type' => 'text',
-                        'value' => $all['DB_NAME'],
+                        'value' => $all['SRP_DB_NAME'],
                         'placeholder' => 'srp_database'
                     ],
-                    'DB_USER' => [
+                    'SRP_DB_USER' => [
                         'label' => 'Database Username',
                         'type' => 'text',
-                        'value' => $all['DB_USER'],
+                        'value' => $all['SRP_DB_USER'],
                         'placeholder' => 'root'
                     ],
-                    'DB_PASS' => [
+                    'SRP_DB_PASS' => [
                         'label' => 'Database Password',
                         'type' => 'password',
-                        'value' => $all['DB_PASS'],
+                        'value' => $all['SRP_DB_PASS'],
                         'placeholder' => '••••••••'
                     ]
                 ]
