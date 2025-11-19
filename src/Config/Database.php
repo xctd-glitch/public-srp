@@ -19,11 +19,11 @@ class Database
 
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-        $host = $_ENV['SRP_DB_HOST'] ?? '127.0.0.1';
-        $user = $_ENV['SRP_DB_USER'] ?? 'root';
-        $pass = $_ENV['SRP_DB_PASS'] ?? '';
-        $name = $_ENV['SRP_DB_NAME'] ?? 'srp';
-        $port = (int)($_ENV['SRP_DB_PORT'] ?? 3306);
+        $host = $_ENV['SRP_DB_HOST'] ?? $_ENV['DB_HOST'] ?? '127.0.0.1';
+        $user = $_ENV['SRP_DB_USER'] ?? $_ENV['DB_USER'] ?? 'root';
+        $pass = $_ENV['SRP_DB_PASS'] ?? $_ENV['DB_PASS'] ?? '';
+        $name = $_ENV['SRP_DB_NAME'] ?? $_ENV['DB_NAME'] ?? 'srp';
+        $port = (int)($_ENV['SRP_DB_PORT'] ?? $_ENV['DB_PORT'] ?? 3306);
         $socket = $_ENV['SRP_DB_SOCKET'] ?? '';
 
         try {
