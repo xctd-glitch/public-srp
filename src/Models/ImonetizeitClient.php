@@ -68,6 +68,24 @@ final class ImonetizeitClient
             return $this->curl($method, $url, $payload, $headers);
         }
 
+        if (isset($response['status']) && in_array((int)$response['status'], [401, 403], true)) {
+            $session = $this->createSession();
+            if ($session === null) {
+                return null;
+            }
+
+            $headers = [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Authorization: Bearer ' . $session['session_token']
+            ];
+
+            $response = $this->curl($method, $url, $payload, $headers);
+            if ($response === null || isset($response['status'])) {
+                return null;
+            }
+        }
+
         return $response;
     }
 
@@ -248,7 +266,10 @@ final class ImonetizeitClient
 
             if ($code < 200 || $code >= 300) {
                 error_log('HTTP error: ' . $code);
-                return null;
+                $json = json_decode((string)$resp, true);
+                $payload = is_array($json) ? $json : [];
+                $payload['status'] = $code;
+                return $payload;
             }
 
             $json = json_decode((string)$resp, true);
